@@ -4,44 +4,66 @@ import GithubProvider from "next-auth/providers/github";
 import connectToDatabase from "@/lib/db";
 import User from "@/models/User";
 
-export const authOptions = {
-  providers: [
+const providers = [];
+
+if (process.env.GOOGLE_ID && process.env.GOOGLE_SECRET) {
+  providers.push(
     GoogleProvider({
-      clientId: process.env.GOOGLE_ID || "GOOGLE_ID",
-      clientSecret: process.env.GOOGLE_SECRET || "GOOGLE_SECRET",
-    }),
+      clientId: process.env.GOOGLE_ID,
+      clientSecret: process.env.GOOGLE_SECRET,
+    })
+  );
+}
+
+if (process.env.GITHUB_ID && process.env.GITHUB_SECRET) {
+  providers.push(
     GithubProvider({
-      clientId: process.env.GITHUB_ID || "GITHUB_ID",
-      clientSecret: process.env.GITHUB_SECRET || "GITHUB_SECRET",
-    }),
-  ],
+      clientId: process.env.GITHUB_ID,
+      clientSecret: process.env.GITHUB_SECRET,
+    })
+  );
+}
+
+export const authOptions = {
+  providers,
   session: {
     strategy: "jwt",
   },
   callbacks: {
-    async signIn({ user, account, profile }) {
-      if (account.provider === "google" || account.provider === "github") {
-        await connectToDatabase();
-        const existingUser = await User.findOne({ email: user.email });
-        if (!existingUser) {
-          await User.create({
-            name: user.name,
-            email: user.email,
-            image: user.image,
+    async signIn({ user, account }) {
+      if (!account || !user?.email) return false;
+
+      await connectToDatabase();
+
+      await User.findOneAndUpdate(
+        { email: user.email },
+        {
+          $set: {
+            name: user.name || "",
+            image: user.image || "",
             isVerified: true,
-          });
-        }
-      }
+            lastLoginAt: new Date(),
+          },
+          $addToSet: { oauthProviders: account.provider },
+        },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+      );
+
       return true;
     },
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user._id;
+    async jwt({ token }) {
+      if (!token?.email) return token;
+
+      await connectToDatabase();
+      const dbUser = await User.findOne({ email: token.email }).select("_id");
+      if (dbUser?._id) {
+        token.id = dbUser._id.toString();
       }
+
       return token;
     },
     async session({ session, token }) {
-      if (token?.id) {
+      if (token?.id && session.user) {
         session.user.id = token.id;
       }
       return session;
@@ -50,7 +72,8 @@ export const authOptions = {
   pages: {
     signIn: "/auth/signin",
   },
-  secret: process.env.NEXTAUTH_SECRET || "my-super-secret-next-auth-key-1234",
+  secret: process.env.NEXTAUTH_SECRET,
+  debug: process.env.NODE_ENV === "development",
 };
 
 const handler = NextAuth(authOptions);
