@@ -4,32 +4,32 @@ const userSchema = new Schema(
   {
     name: {
       type: String,
-      required: false,
+      trim: true,
+      default: "",
     },
     email: {
       type: String,
       required: true,
       unique: true,
-    },
-    password: {
-      type: String,
-      required: false, // Optional if signing in with OAuth
+      lowercase: true,
+      trim: true,
     },
     image: {
       type: String,
-      required: false,
+      default: "",
     },
     isVerified: {
       type: Boolean,
-      default: false,
+      default: true,
     },
-    otpCode: {
-      type: String,
-      required: false,
+    oauthProviders: {
+      type: [String],
+      enum: ["google", "github"],
+      default: [],
     },
-    otpExpires: {
+    lastLoginAt: {
       type: Date,
-      required: false,
+      default: null,
     },
   },
   { timestamps: true }
