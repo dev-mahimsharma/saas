@@ -1,0 +1,24 @@
+Γû▓ Next.js 16.2.2 (Turbopack)
+
+  Creating an optimized production build ...
+Γ£ô Compiled successfully in 4.4s
+  Running TypeScript ...
+  Finished TypeScript in 130ms ...
+  Collecting page data using 11 workers ...
+Error: Please define the MONGODB_URI environment variable inside .env.local
+    at module evaluation (C:\Users\spars\OneDrive\Desktop\saas\.next\server\chunks\[root-of-the-server]__0sl8v9m._.js:1:1296)
+    at instantiateModule (C:\Users\spars\OneDrive\Desktop\saas\.next\server\chunks\[turbopack]_runtime.js:853:9)
+    at getOrInstantiateModuleFromParent (C:\Users\spars\OneDrive\Desktop\saas\.next\server\chunks\[turbopack]_runtime.js:877:12)
+    at Context.esmImport [as i] (C:\Users\spars\OneDrive\Desktop\saas\.next\server\chunks\[turbopack]_runtime.js:281:20)
+    at module evaluation (C:\Users\spars\OneDrive\Desktop\saas\.next\server\chunks\[root-of-the-server]__0xf~fcl._.js:1:215006)
+    at instantiateModule (C:\Users\spars\OneDrive\Desktop\saas\.next\server\chunks\[turbopack]_runtime.js:853:9)
+    at instantiateRuntimeModule (C:\Users\spars\OneDrive\Desktop\saas\.next\server\chunks\[turbopack]_runtime.js:882:12)
+    at getOrInstantiateRuntimeModule (C:\Users\spars\OneDrive\Desktop\saas\.next\server\chunks\[turbopack]_runtime.js:895:12)
+    at Object.m (C:\Users\spars\OneDrive\Desktop\saas\.next\server\chunks\[turbopack]_runtime.js:898:18)
+    at Object.<anonymous> (C:\Users\spars\OneDrive\Desktop\saas\.next\server\app\api\auth\register\route.js:9:3)
+
+> Build error occurred
+Error: Failed to collect page data for /api/auth/register
+    at ignore-listed frames {
+  type: 'Error'
+}
