@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useMemo, useState, useEffect, useRef } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import Card from "@/components/Card";
 import FrameworkCard from "@/components/FrameworkCard";
 import LiveStructurePreview from "@/components/LiveStructurePreview";
@@ -75,6 +76,8 @@ function IconMern() {
 
 export default function HomePage() {
   const router = useRouter();
+  const pathname = usePathname();
+  const { status } = useSession();
   const [presetId, setPresetId] = useState("next");
   const [projectNameInput, setProjectNameInput] = useState("my-awesome-app");
   const [busy, setBusy] = useState(false);
@@ -97,18 +100,44 @@ export default function HomePage() {
     return map[selected.stack] ?? "~zip";
   }, [selected.stack]);
 
-  async function handleCreate() {
+  const hasAutoFired = useRef(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && status === "authenticated" && !hasAutoFired.current) {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("auto") === "true") {
+        hasAutoFired.current = true;
+        const pStack = params.get("stack") || selected.stack;
+        const pProject = params.get("project") || projectNameInput;
+        setPresetId(pStack);
+        setProjectNameInput(pProject);
+        handleCreate(pStack, pProject);
+      }
+    }
+  }, [status]);
+
+  async function handleCreate(overrideStack, overrideProject) {
+    const targetStack = typeof overrideStack === "string" ? overrideStack : selected.stack;
+    const targetProject = typeof overrideProject === "string" ? overrideProject : projectNameInput;
+
+    if (status !== "authenticated") {
+      const autoQs = new URLSearchParams({ auto: "true", stack: targetStack, project: targetProject });
+      router.push(`/auth/signin?callbackUrl=${encodeURIComponent((pathname || "/web-development") + "?" + autoQs.toString())}`);
+      return;
+    }
+
     setError("");
     setBusy(true);
     try {
       const { sizeKb, projectRoot, filename } = await generateProject({
-        stack: selected.stack,
-        projectName: projectNameInput,
+        stack: targetStack,
+        projectName: targetProject,
+        returnTo: pathname || "/web-development",
       });
       const q = new URLSearchParams({
         project: projectRoot,
         size: sizeKb,
-        stack: selected.stack,
+        stack: targetStack,
         file: filename,
       });
       router.push(`/success?${q.toString()}`);
@@ -202,14 +231,18 @@ export default function HomePage() {
 
               <button
                 type="button"
-                disabled={busy}
+                disabled={busy || status === "loading"}
                 onClick={handleCreate}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-4 text-sm font-semibold text-white shadow-md transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-blue-600 py-4 text-sm font-semibold text-white shadow-md transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
-                {busy ? "Preparing archive…" : "Create & Download Project"}
+                {status === "loading"
+                  ? "Checking session..."
+                  : busy
+                    ? "Preparing archive..."
+                    : "Create & Download Project"}
               </button>
             </div>
           </Card>
