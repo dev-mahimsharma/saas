@@ -1,8 +1,9 @@
 "use client";
 
 import { signIn } from "next-auth/react";
-import { useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 const oauthProviders = [
   {
@@ -50,9 +51,18 @@ function errorMessage(code) {
 }
 
 export default function SignIn() {
+  const router = useRouter();
   const searchParams = useSearchParams();
+  const { status } = useSession();
   const error = searchParams.get("error");
+  const callbackUrl = searchParams.get("callbackUrl") || "/templates";
   const [loadingProvider, setLoadingProvider] = useState(null);
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      router.replace(callbackUrl);
+    }
+  }, [callbackUrl, router, status]);
 
   const enabledProviders = useMemo(
     () =>
@@ -72,7 +82,7 @@ export default function SignIn() {
         </div>
 
         {error && (
-          <div className="mb-6 p-4 w-full bg-red-100/50 text-red-600 rounded-xl text-center text-sm font-bold border border-red-200">
+          <div className="mb-6 w-full rounded-xl border border-red-200 bg-red-100/50 p-4 text-center text-sm font-bold text-red-600">
             {errorMessage(error)}
           </div>
         )}
@@ -83,7 +93,7 @@ export default function SignIn() {
               key={provider.id}
               onClick={async () => {
                 setLoadingProvider(provider.id);
-                await signIn(provider.id, { callbackUrl: provider.callbackUrl });
+                await signIn(provider.id, { callbackUrl });
               }}
               disabled={loadingProvider !== null}
               className={`flex items-center justify-center gap-3 w-full font-bold py-4 rounded-full transition-all text-[15px] shadow-sm hover:shadow-md cursor-pointer outline-none group disabled:opacity-60 disabled:cursor-not-allowed ${provider.styles}`}
