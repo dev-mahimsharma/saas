@@ -7,6 +7,7 @@ import Link from "next/link";
 import LiveStructurePreview from "@/components/LiveStructurePreview";
 import { getStructureTree } from "@/data/structureTrees";
 import { generateProject } from "@/lib/downloadZip";
+import { saveLastGeneratedProject } from "@/lib/projectPreview";
 import { safeProjectName } from "@/lib/safeProjectName";
 
 const PRESETS = [
@@ -162,11 +163,28 @@ export default function HomePage() {
         language: targetLang,
         returnTo: pathname || "/web-development",
       });
+      saveLastGeneratedProject({
+        projectName: targetProject,
+        category: "web-dev",
+        language: targetLang,
+        stack: targetStack === "html" ? "vanilla" : targetStack,
+        styling: "",
+        uiLib: "",
+        includeTests: false,
+        includeReadme: true,
+        readmeContent: "",
+        dependencies: { frontend: [], backend: [] },
+      });
       const q = new URLSearchParams({
         project: projectRoot,
         size: sizeKb,
         stack: targetStack,
         file: filename,
+        lang: targetLang,
+        tests: "0",
+        readme: "1",
+        fdeps: "0",
+        bdeps: "0",
       });
       router.push(`/success?${q.toString()}`);
     } catch (e) {
