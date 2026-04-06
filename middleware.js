@@ -1,5 +1,5 @@
-export { default } from "next-auth/middleware";
+import { NextResponse } from "next/server";
 
-export const config = {
-  matcher: ["/templates/:path*", "/web-development/:path*", "/app-selection/:path*", "/app-development/:path*", "/success/:path*"],
-};
+export function middleware() {
+  return NextResponse.next();
+}
