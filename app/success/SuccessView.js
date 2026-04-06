@@ -162,10 +162,7 @@ export default function SuccessView() {
                 <dt className="text-sm text-slate-400">Stack</dt>
                 <dd className="text-sm font-semibold uppercase">{stack}</dd>
               </div>
-              <div className="flex items-center justify-between gap-4">
-                <dt className="text-sm text-slate-400">Schema version</dt>
-                <dd className="text-sm font-semibold">v4.2.0-stable</dd>
-              </div>
+
             </dl>
             <div className="mt-8 flex items-start gap-2 border-t border-slate-800 pt-6 text-xs text-slate-500">
               <svg

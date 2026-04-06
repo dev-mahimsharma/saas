@@ -518,6 +518,28 @@ export const structureTrees = {
   ]
 };
 
-export function getStructureTree(stack) {
-  return structureTrees[stack] ?? structureTrees.next;
+export function getStructureTree(stack, language = "js") {
+  const tree = structureTrees[stack] ?? structureTrees.next;
+  
+  if (language === "ts") {
+    const clone = JSON.parse(JSON.stringify(tree));
+    const applyTs = (nodes) => {
+      for (const n of nodes) {
+        if (n.name === "jsconfig.json") {
+          n.name = "tsconfig.json";
+        } else if (n.name.endsWith(".js") && !n.name.endsWith(".mjs")) {
+          n.name = n.name.replace(/\.js$/, ".ts");
+        } else if (n.name.endsWith(".jsx")) {
+          n.name = n.name.replace(/\.jsx$/, ".tsx");
+        }
+        if (n.children) {
+          applyTs(n.children);
+        }
+      }
+    };
+    applyTs(clone);
+    return clone;
+  }
+  
+  return tree;
 }

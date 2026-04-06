@@ -100,6 +100,12 @@ function FileIcon({ name }) {
         <path d="M3 3h18v18H3V3zm4.5 5.5L9 10l-1.5 1.5v5L9 18l1.5-1.5v-5zm5 1L14 12l-1.5 1.5v2L14 17l1.5-1.5v-2zm3.5-1L18 10l1.5 1.5v5L18 18l-1.5-1.5v-5z" />
       </svg>
     );
+  if (ext === "ts" || ext === "tsx")
+    return (
+      <svg className={`${cls} text-blue-400`} fill="currentColor" viewBox="0 0 24 24" aria-hidden>
+        <path d="M3 3h18v18H3V3zm4.5 5.5L9 10l-1.5 1.5v5L9 18l1.5-1.5v-5zm5 1L14 12l-1.5 1.5v2L14 17l1.5-1.5v-2zm3.5-1L18 10l1.5 1.5v5L18 18l-1.5-1.5v-5z" />
+      </svg>
+    );
   if (ext === "astro" || name.endsWith(".astro"))
     return (
       <svg className={`${cls} text-violet-400`} fill="currentColor" viewBox="0 0 24 24" aria-hidden>
@@ -148,7 +154,7 @@ function TreeNodes({
               <button
                 type="button"
                 onClick={() => toggleFolder(path)}
-                className="flex w-full items-center gap-1.5 rounded-md py-1 pr-2 text-left font-mono text-[12px] text-amber-100/95 transition hover:bg-slate-800/80"
+                className="flex w-full cursor-pointer items-center gap-1.5 rounded-md py-1 pr-2 text-left font-mono text-[12px] text-amber-100/95 transition hover:bg-slate-800/80"
                 style={{ paddingLeft: 8 + depth * 14 }}
               >
                 <Chevron open={open} />
@@ -182,7 +188,7 @@ function TreeNodes({
                 snippet: node.snippet || null,
               })
             }
-            className={`flex w-full items-center gap-2 rounded-md py-1 pr-2 text-left font-mono text-[12px] transition hover:bg-slate-800/80 ${
+            className={`flex w-full cursor-default items-center gap-2 rounded-md py-1 pr-2 text-left font-mono text-[12px] transition hover:bg-slate-800/80 ${
               active ? "bg-slate-800 text-amber-100" : "text-slate-200"
             }`}
             style={{ paddingLeft: 8 + depth * 14 + 18 }}
@@ -279,7 +285,7 @@ export default function FolderTreePreview({
           <button
             type="button"
             onClick={toggleRoot}
-            className="flex w-full items-center gap-1.5 rounded-md py-1 pr-2 text-left font-mono text-[12px] text-amber-100/95 transition hover:bg-slate-800/80"
+            className="flex w-full cursor-pointer items-center gap-1.5 rounded-md py-1 pr-2 text-left font-mono text-[12px] text-amber-100/95 transition hover:bg-slate-800/80"
             style={{ paddingLeft: 8 }}
           >
             <Chevron open={rootOpen} />

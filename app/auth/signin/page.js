@@ -64,6 +64,17 @@ export default function SignIn() {
     }
   }, [callbackUrl, router, status]);
 
+  useEffect(() => {
+    if (loadingProvider !== null) {
+      document.body.style.pointerEvents = "none";
+      document.body.style.opacity = "0.7";
+      return () => {
+        document.body.style.pointerEvents = "auto";
+        document.body.style.opacity = "1";
+      };
+    }
+  }, [loadingProvider]);
+
   const enabledProviders = useMemo(
     () =>
       oauthProviders.filter((provider) => {
@@ -92,8 +103,12 @@ export default function SignIn() {
             <button
               key={provider.id}
               onClick={async () => {
-                setLoadingProvider(provider.id);
-                await signIn(provider.id, { callbackUrl });
+                try {
+                  setLoadingProvider(provider.id);
+                  await signIn(provider.id, { callbackUrl });
+                } catch (err) {
+                  setLoadingProvider(null);
+                }
               }}
               disabled={loadingProvider !== null}
               className={`flex items-center justify-center gap-3 w-full font-bold py-4 rounded-full transition-all text-[15px] shadow-sm hover:shadow-md cursor-pointer outline-none group disabled:opacity-60 disabled:cursor-not-allowed ${provider.styles}`}

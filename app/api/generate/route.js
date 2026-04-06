@@ -2,17 +2,18 @@ import archiver from "archiver";
 import fs from "fs";
 import path from "path";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { safeProjectName } from "@/lib/safeProjectName";
 
 export const runtime = "nodejs";
 
 const TEMPLATE_MAP = {
-  html: "basic-html",
+  next: "nextjs",
+  mern: "mern",
+  django: "django-react",
+  html: "html", // handled specially
   react: "react-vite",
   vue: "vue-vite",
-  next: "nextjs-app",
-  mern: "mern-stack",
   svelte: "svelte-vite",
   astro: "astro-app",
   api: "express-api",
@@ -54,12 +55,23 @@ export async function POST(request) {
   }
 
   const projectRoot = safeProjectName(body?.projectName);
-  const folderName = TEMPLATE_MAP[stack];
-  const templatesRoot = path.join(process.cwd(), "templates");
-  const sourceDir = path.join(templatesRoot, folderName);
+  const language = body?.language === "js" ? "javascript" : "typescript";
+  const versionFolder = `${language}-version`;
+  
+  let folderName = TEMPLATE_MAP[stack];
+  if (stack === "html") {
+    folderName = `vanilla-${body?.language === "js" ? "js" : "ts"}-starter`;
+  }
+
+  let sourceDir = path.join(process.cwd(), "templates", "web-dev", versionFolder, folderName);
 
   if (!fs.existsSync(sourceDir) || !fs.statSync(sourceDir).isDirectory()) {
-    return Response.json({ error: "Template not found on disk" }, { status: 404 });
+    // Fallback logic for legacy templates just in case
+    const legacyDir = path.join(process.cwd(), "templates", "web-dev", folderName);
+    if (!fs.existsSync(legacyDir)) {
+      return Response.json({ error: "Template not found on disk" }, { status: 404 });
+    }
+    sourceDir = legacyDir;
   }
 
   const chunks = [];

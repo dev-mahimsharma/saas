@@ -1,0 +1,15 @@
+{
+  "name": "vanilla-ts-starter",
+  "version": "1.0.0",
+  "description": "Strict TypeScript vanilla starter template",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc -w"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
