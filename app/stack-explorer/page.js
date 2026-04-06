@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import BlueprintPreview from "@/components/BlueprintPreview";
 import FrameworkCard from "@/components/FrameworkCard";
 import { getStructureTree } from "@/data/structureTrees";
@@ -101,6 +102,8 @@ const icons = {
 
 export default function StackExplorerPage() {
   const router = useRouter();
+  const pathname = usePathname();
+  const { status } = useSession();
   const [selectedStack, setSelectedStack] = useState("next");
   const [projectNameInput, setProjectNameInput] = useState("my-project");
   const [busy, setBusy] = useState(false);
@@ -127,12 +130,18 @@ export default function StackExplorerPage() {
   }, [selectedStack]);
 
   async function handleGenerate() {
+    if (status !== "authenticated") {
+      router.push(`/auth/signin?callbackUrl=${encodeURIComponent(pathname || "/stack-explorer")}`);
+      return;
+    }
+
     setError("");
     setBusy(true);
     try {
       const { sizeKb, projectRoot, filename } = await generateProject({
         stack: selectedStack,
         projectName: projectNameInput,
+        returnTo: pathname || "/stack-explorer",
       });
       const q = new URLSearchParams({
         project: projectRoot,
@@ -220,14 +229,18 @@ export default function StackExplorerPage() {
             action={
               <button
                 type="button"
-                disabled={busy}
+                disabled={busy || status === "loading"}
                 onClick={handleGenerate}
                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-3.5 text-sm font-semibold text-white shadow-lg transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
-                {busy ? "Zipping…" : "Generate & Download Project"}
+                {status === "loading"
+                  ? "Checking session..."
+                  : busy
+                    ? "Zipping…"
+                    : "Generate & Download Project"}
               </button>
             }
           />
