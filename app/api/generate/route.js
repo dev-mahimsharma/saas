@@ -1,6 +1,8 @@
 import archiver from "archiver";
 import fs from "fs";
 import path from "path";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { safeProjectName } from "@/lib/safeProjectName";
 
 export const runtime = "nodejs";
@@ -24,6 +26,22 @@ export async function POST(request) {
     body = await request.json();
   } catch {
     return Response.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
+
+  const callbackUrl =
+    typeof body?.returnTo === "string" && body.returnTo.startsWith("/")
+      ? body.returnTo
+      : "/web-development";
+
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.email) {
+    return Response.json(
+      {
+        error: "Please sign in to generate and download projects.",
+        redirectTo: `/auth/signin?callbackUrl=${encodeURIComponent(callbackUrl)}`,
+      },
+      { status: 401 }
+    );
   }
 
   const stack = body?.stack;
