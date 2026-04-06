@@ -1,0 +1,15 @@
+:root {
+  --primary-color: #2563eb;
+  --bg-color: #f8fafc;
+  --text-color: #1e293b;
+  --header-bg: #fff;
+  --border-color: #e2e8f0;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: system-ui, sans-serif; background: var(--bg-color); color: var(--text-color); }
+.nav { display: flex; gap: 1rem; padding: 1rem; background: var(--header-bg); border-bottom: 1px solid var(--border-color); }
+.nav a { text-decoration: none; color: var(--primary-color); font-weight: 600; }
+.container { padding: 2rem; max-width: 800px; margin: 0 auto; }
+.btn { background: var(--primary-color); color: white; padding: 0.5rem 1rem; border: none; border-radius: 4px; cursor: pointer; }
+.form-group { margin-bottom: 1rem; }
+.form-group input { width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px; mt-1; }
