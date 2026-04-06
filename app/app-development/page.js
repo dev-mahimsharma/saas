@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useMemo, useEffect, useRef } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
 import ToggleSwitch from "@/components/ToggleSwitch";
 import Dropdown from "@/components/Dropdown";
 import LiveStructurePreview from "@/components/LiveStructurePreview";
@@ -9,14 +10,36 @@ import { getStructureTree } from "@/data/structureTrees";
 
 export default function AppConfigurator() {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const { status } = useSession();
+  const requestedParadigm = searchParams?.get("paradigm");
+  const initialParadigm =
+    requestedParadigm === "native" ? "native" : "cross-platform";
+  const initialStack =
+    initialParadigm === "native" ? "swift" : "react-native";
 
   // App specific state
   const [projectName, setProjectName] = useState("my-mobile-app");
-  const [paradigm, setParadigm] = useState("cross-platform"); // 'cross-platform' or 'native'
-  const [stack, setStack] = useState("react-native"); // 'react-native', 'flutter', 'swift', 'kotlin'
+  const [paradigm, setParadigm] = useState(initialParadigm); // 'cross-platform' or 'native'
+  const [stack, setStack] = useState(initialStack); // 'react-native', 'flutter', 'swift', 'kotlin'
   const [stateManagement, setStateManagement] = useState("Redux Toolkit + Thunk");
   const [dataLayer, setDataLayer] = useState("Axios + TanStack Query");
   const [feats, setFeats] = useState({ push: true, offline: false, deepLinking: true });
+
+  const hasAutoFired = useRef(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && status === "authenticated" && !hasAutoFired.current) {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("auto") === "true") {
+        hasAutoFired.current = true;
+        const pStack = params.get("stack") || stack;
+        const pProject = params.get("project") || projectName;
+        router.push(`/success?project=${encodeURIComponent(pProject)}&stack=${pStack}`);
+      }
+    }
+  }, [status, stack, projectName]);
 
   const handleSetParadigm = (p) => {
     setParadigm(p);
@@ -24,17 +47,19 @@ export default function AppConfigurator() {
     if (p === "native") setStack("swift");
   };
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      const p = params.get("paradigm");
-      if (p === "native" || p === "cross-platform") {
-        handleSetParadigm(p);
-      }
-    }
-  }, []);
-
   const handleScaffold = () => {
+    if (status !== "authenticated") {
+      const qs = new URLSearchParams({
+        auto: "true",
+        paradigm: paradigm,
+        stack: stack,
+        project: projectName,
+      });
+      const currentPath = `${pathname || "/app-development"}?${qs.toString()}`;
+      router.push(`/auth/signin?callbackUrl=${encodeURIComponent(currentPath)}`);
+      return;
+    }
+
     router.push(`/success?project=${encodeURIComponent(projectName)}&stack=${stack}`);
   };
 
@@ -203,10 +228,11 @@ export default function AppConfigurator() {
             {/* Submit */}
             <button
               onClick={handleScaffold}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-4 text-sm font-semibold text-white shadow-md transition hover:bg-blue-700 mt-8"
+              disabled={status === "loading"}
+              className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-blue-600 py-4 text-sm font-semibold text-white shadow-md transition hover:bg-blue-700 mt-8 disabled:cursor-not-allowed"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-              Scaffold Now
+              {status === "loading" ? "Checking session..." : "Scaffold Now"}
             </button>
           </div>
 
